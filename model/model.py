@@ -5,13 +5,14 @@ sys.path.append('utils')
 from utils import *
 from tqdm import tqdm
 import _pickle as cPickle
+import os
 
 def get_hparams():
     dec_map = cPickle.load(open('./dataset/dec_map.pkl', 'rb'))  # id => token
     vocab_size = len(dec_map)
     hparams = tf.contrib.training.HParams(
         vocab_size=vocab_size,
-        batch_size=128,
+        batch_size=256,
         rnn_units=256,
         image_embedding_size=256,
         word_embedding_size=256,
