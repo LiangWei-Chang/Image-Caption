@@ -20,6 +20,7 @@ def create_tfrecords(df_cap, img_df, filename, num_files=5):
     length = []
     for cap in df_cap['caption']:
         length.append(len(cap.split(',')))
+    df_cap['len'] = np.array(length)
     df_cap = df_cap.sort_values(by=['len', 'img_id'])
     df_cap = df_cap.reset_index(drop=True)
 
