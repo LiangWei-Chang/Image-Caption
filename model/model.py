@@ -167,7 +167,7 @@ class ImageCaptionModel(object):
                 saver.restore(sess, ckpt.model_checkpoint_path)
                 # assume the name of checkpoint is like '.../model.ckpt-1000'
                 gs = int(ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1])
-                sess.run(tf.assign(global_step, gs))
+                sess.run(tf.assign(self.global_step, gs))
             else:
                 # no checkpoint
                 sess.run(tf.global_variables_initializer())
