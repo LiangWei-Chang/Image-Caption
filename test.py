@@ -8,10 +8,12 @@ sys.path.append('utils')
 from tqdm import tqdm
 from model import *
 from utils import *
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
     img_ids, caps = [], []
-    pbar = tqdm(total=len(img_test.items()))
+
+    pbar = tqdm(total=len(img_test.items()) // 10)
     for img_id, img in img_test.items():
         img_ids.append(img_id)
         img = np.expand_dims(img, axis=0)
