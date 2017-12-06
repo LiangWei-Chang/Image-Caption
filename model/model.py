@@ -13,7 +13,7 @@ def get_hparams():
         image_embedding_size=256,
         word_embedding_size=512,
         drop_keep_prob=0.7,
-        lr=1e-3,
+        lr=1e-4,
         training_epochs=1,
         max_caption_len=15,
         ckpt_dir='model_ckpt/')
@@ -25,7 +25,7 @@ class ImageCaptionModel(object):
         self.hps = hparams
         self.mode = mode
 
-    def build_inputs(self):
+    def _build_inputs(self):
         if self.mode == 'train':
         self.filenames = tf.placeholder(tf.string, shape=[None], name='filenames')
         self.training_iterator, types, shapes = tfrecord_iterator(self.filenames, self.hps.batch_size, training_parser)
@@ -55,7 +55,7 @@ class ImageCaptionModel(object):
         self.target_seq = target_seq
         self.input_mask = input_mask
 
-    def build_seq_embeddings(self):
+    def _build_seq_embeddings(self):
         with tf.variable_scope('seq_embedding'), tf.device('/cpu:0'):
             embedding_matrix = tf.get_variable(name='embedding_matrix',
                                                shape=[self.hps.vocab_size, self.hps.word_embedding_size],
@@ -64,7 +64,7 @@ class ImageCaptionModel(object):
             seq_embeddings = tf.nn.embedding_lookup(embedding_matrix, self.input_seq)
         self.seq_embeddings = seq_embeddings
 
-    def build_model(self):
+    def _build_model(self):
         # create rnn cell, you can choose different cell,
         # even stack into multi-layer rnn
         rnn_cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=self.hps.rnn_units, state_is_tuple=True)
@@ -135,7 +135,14 @@ class ImageCaptionModel(object):
 
                 # create optimizer
                 optimizer = tf.train.AdamOptimizer(learning_rate=self.hps.lr)
-                self.train_op = optimizer.minimize(self.total_loss, global_step=self.global_step)
+
+                # compute the gradients of a list of variables
+                grads_and_vars = optimizer.compute_gradients(self.total_loss, tf.trainable_variables())
+                # grads_and_vars is a list of tuple (gradient, variable)
+                # do whatever you need to the 'gradients' part
+                clipped_grads_and_vars = [(tf.clip_by_norm(gv[0], 1.0), gv[1]) for gv in grads_and_vars]
+                # apply gradient and variables to optimizer
+                self.train_op = optimizer.apply_gradients(clipped_grads_and_vars, global_step=global_step)
 
             else:
                 pred_softmax = tf.nn.softmax(logits, name='softmax')
@@ -161,28 +168,28 @@ class ImageCaptionModel(object):
                 # no checkpoint
                 sess.run(tf.global_variables_initializer())
 
-        training_handle = sess.run(self.training_iterator.string_handle())
-        sess.run(self.training_iterator.initializer, feed_dict={self.filenames: training_filenames})
+            training_handle = sess.run(self.training_iterator.string_handle())
+            sess.run(self.training_iterator.initializer, feed_dict={self.filenames: training_filenames})
 
-        num_batch_per_epoch_train = num_train_records // self.hps.batch_size
+            num_batch_per_epoch_train = num_train_records // self.hps.batch_size
 
-        loss = []
-        for epoch in range(self.hps.training_epochs):
-            _loss = []
-            for i in tqdm(range(num_batch_per_epoch_train)):
-                train_loss_batch, _ = sess.run([self.total_loss, self.train_op], feed_dict={self.handle: training_handle})
-                _loss.append(train_loss_batch)
-                if (i % 1000 == 0):
-                    print("minibatch training loss: {:.4f}".format(train_loss_batch))
+            loss = []
+            for epoch in range(self.hps.training_epochs):
+                _loss = []
+                for i in tqdm(range(num_batch_per_epoch_train)):
+                    train_loss_batch, _ = sess.run([self.total_loss, self.train_op], feed_dict={self.handle: training_handle})
+                    _loss.append(train_loss_batch)
+                    if (i % 1000 == 0):
+                        print("minibatch training loss: {:.4f}".format(train_loss_batch))
 
-            loss_this_epoch = np.sum(_loss)
-            gs = self.global_step.eval()
-            print('Epoch {:2d} - train loss: {:.4f}'.format(int(gs / num_batch_per_epoch_train), loss_this_epoch))
-            loss.append(loss_this_epoch)
-            saver.save(sess, ckpt_dir + 'model.ckpt', global_step=gs)
-            print("save checkpoint in {}".format(ckpt_dir + 'model.ckpt-' + str(gs)))
+                loss_this_epoch = np.sum(_loss)
+                gs = self.global_step.eval()
+                print('Epoch {:2d} - train loss: {:.4f}'.format(int(gs / num_batch_per_epoch_train), loss_this_epoch))
+                loss.append(loss_this_epoch)
+                saver.save(sess, ckpt_dir + 'model.ckpt', global_step=gs)
+                print("save checkpoint in {}".format(ckpt_dir + 'model.ckpt-' + str(gs)))
 
-        print('Done')
+            print('Done')
 
     def inference(self, img_embed, enc_map, dec_map):
         saver = tf.train.Saver()
