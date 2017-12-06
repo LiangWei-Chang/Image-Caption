@@ -17,7 +17,7 @@ def get_hparams():
         word_embedding_size=256,
         drop_keep_prob=0.7,
         lr=1e-4,
-        training_epochs=1,
+        training_epochs=10,
         max_caption_len=15,
         ckpt_dir='model_ckpt/')
     return hparams
@@ -189,8 +189,10 @@ class ImageCaptionModel(object):
                 gs = self.global_step.eval()
                 print('Epoch {:2d} - train loss: {:.4f}'.format(int(gs / num_batch_per_epoch_train), loss_this_epoch))
                 loss.append(loss_this_epoch)
-                saver.save(sess, ckpt_dir + 'model.ckpt', global_step=gs)
-                print("save checkpoint in {}".format(ckpt_dir + 'model.ckpt-' + str(gs)))
+                if not os.path.exists(self.hps.ckpt_dir):
+                    os.makedirs(self.hps.ckpt_dir)
+                saver.save(sess, self.hps.ckpt_dir + 'model.ckpt', global_step=gs)
+                print("save checkpoint in {}".format(self.hps.ckpt_dir + 'model.ckpt-' + str(gs)))
 
             print('Done')
 
