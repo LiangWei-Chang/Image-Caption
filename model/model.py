@@ -11,10 +11,10 @@ def get_hparams():
     vocab_size = len(dec_map)
     hparams = tf.contrib.training.HParams(
         vocab_size=vocab_size,
-        batch_size=256,
+        batch_size=128,
         rnn_units=256,
         image_embedding_size=256,
-        word_embedding_size=512,
+        word_embedding_size=256,
         drop_keep_prob=0.7,
         lr=1e-4,
         training_epochs=1,
@@ -145,7 +145,7 @@ class ImageCaptionModel(object):
                 # do whatever you need to the 'gradients' part
                 clipped_grads_and_vars = [(tf.clip_by_norm(gv[0], 1.0), gv[1]) for gv in grads_and_vars]
                 # apply gradient and variables to optimizer
-                self.train_op = optimizer.apply_gradients(clipped_grads_and_vars, global_step=global_step)
+                self.train_op = optimizer.apply_gradients(clipped_grads_and_vars, global_step=self.global_step)
 
             else:
                 pred_softmax = tf.nn.softmax(logits, name='softmax')
