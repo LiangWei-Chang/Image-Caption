@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import tensorflow as tf
 import _pickle as cPickle
+from tqdm import tqdm
 
 def create_tfrecords(df_cap, img_df, filename, num_files=5):
 
@@ -25,6 +26,7 @@ def create_tfrecords(df_cap, img_df, filename, num_files=5):
         st = i * num_records_per_file                                              # start point (inclusive)
         ed = (i+1) * num_records_per_file if i != num_files-1 else img_df.shape[0] # end point (exclusive)
 
+        pbar = tqdm(total = ed - st)
         for idx, row in img_df.iloc[st : ed].iterrows():
 
             img_representation = row['img']                 # img representation in 256-d array format
@@ -41,6 +43,8 @@ def create_tfrecords(df_cap, img_df, filename, num_files=5):
 
                 count += 1
                 writer.write(example.SerializeToString())
+            pbar.update(1)
+            
         print("Create {}-{}.tfrecord -- contains {} records".format(filename, str(i+1), count))
         total_count += count
         writer.close()
