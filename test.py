@@ -21,6 +21,7 @@ def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
 
 enc_map = cPickle.load(open('dataset/enc_map.pkl', 'rb'))  # token => id
 dec_map = cPickle.load(open('dataset/dec_map.pkl', 'rb'))  # id => token
+hparams = get_hparams()
 
 # create model
 tf.reset_default_graph()
