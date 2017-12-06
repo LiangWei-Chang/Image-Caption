@@ -27,18 +27,18 @@ class ImageCaptionModel(object):
 
     def _build_inputs(self):
         if self.mode == 'train':
-        self.filenames = tf.placeholder(tf.string, shape=[None], name='filenames')
-        self.training_iterator, types, shapes = tfrecord_iterator(self.filenames, self.hps.batch_size, training_parser)
+            self.filenames = tf.placeholder(tf.string, shape=[None], name='filenames')
+            self.training_iterator, types, shapes = tfrecord_iterator(self.filenames, self.hps.batch_size, training_parser)
 
-        self.handle = tf.placeholder(tf.string, shape=[], name='handle')
-        iterator = tf.data.Iterator.from_string_handle(self.handle, types, shapes)
-        records = iterator.get_next()
+            self.handle = tf.placeholder(tf.string, shape=[], name='handle')
+            iterator = tf.data.Iterator.from_string_handle(self.handle, types, shapes)
+            records = iterator.get_next()
 
-        image_embed = records['img']
-        image_embed.set_shape([None, self.hps.image_embedding_size])
-        input_seq = records['input_seq']
-        target_seq = records['output_seq']
-        input_mask = records['mask']
+            image_embed = records['img']
+            image_embed.set_shape([None, self.hps.image_embedding_size])
+            input_seq = records['input_seq']
+            target_seq = records['output_seq']
+            input_mask = records['mask']
 
         else:
             image_embed = tf.placeholder(tf.float32, shape=[None, self.hps.image_embedding_size], name='image_embed')
@@ -103,9 +103,9 @@ class ImageCaptionModel(object):
                 # concatenate the resulting state.
                 final_state = tf.concat(values=state, axis=1, name='final_state')
 
-            # stack rnn output vertically
-            # [sequence_len * batch_size, rnn_output_size]
-            rnn_outputs = tf.reshape(outputs, [-1, rnn_cell.output_size])
+        # stack rnn output vertically
+        # [sequence_len * batch_size, rnn_output_size]
+        rnn_outputs = tf.reshape(outputs, [-1, rnn_cell.output_size])
 
         # get logits after transforming from dense layer
         with tf.variable_scope("logits") as logits_scope:
@@ -194,7 +194,6 @@ class ImageCaptionModel(object):
     def inference(self, img_embed, enc_map, dec_map):
         saver = tf.train.Saver()
         with tf.Session() as sess:
-
             # restore variables from disk.
             ckpt = tf.train.get_checkpoint_state(self.hps.ckpt_dir)
             if ckpt and ckpt.model_checkpoint_path:
