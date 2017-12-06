@@ -212,7 +212,7 @@ class ImageCaptionModel(object):
     def _predict(self, sess, img_embed, enc_map, dec_map):
 
         # get <start> and <end> word id
-        st, ed = enc_map['<ST>'], enc_map['<ED>']
+        st, ed = enc_map['<BEG>'], enc_map['<END>']
 
         caption_id = []
         # feed into input_feed
