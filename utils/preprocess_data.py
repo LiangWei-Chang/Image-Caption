@@ -17,7 +17,7 @@ def build_caption_vector(enc_map, df):
 
     return pd.DataFrame({'img_id': img_ids, 'caption': cap_vecs}).set_index(['img_id'])
 
-def build_vocab(df):
+def build_vocab(df, vocab):
     threshold = 20
     # Compite occurance of each vocab
     voc_count = {v: 0 for v in vocab}
@@ -42,7 +42,7 @@ def main():
     vocab = load_pickle('./dataset/vocab.pkl')
     df_train = pd.read_csv(os.path.join('./dataset', 'train.csv'))
 
-    encode_map, decode_map = build_vocab(df_train)
+    encode_map, decode_map = build_vocab(df_train, vocab)
     save_pickle(encode_map, './dataset/enc_map.pkl')
     save_pickle(decode_map, './dataset/dec_map.pkl')
 
