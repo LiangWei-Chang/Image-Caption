@@ -31,7 +31,7 @@ class ImageCaptionModel(object):
     def _build_inputs(self):
         if self.mode == 'train':
             self.filenames = tf.placeholder(tf.string, shape=[None], name='filenames')
-            self.training_iterator, types, shapes = tfrecord_iterator(self.filenames, self.hps.batch_size, training_parser)
+            self.training_iterator, types, shapes = tfrecord_iterator(self.filenames, self.hps.batch_size, record_parser)
 
             self.handle = tf.placeholder(tf.string, shape=[], name='handle')
             iterator = tf.data.Iterator.from_string_handle(self.handle, types, shapes)
