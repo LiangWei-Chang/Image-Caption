@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append('utils')
 
+from utils import *
 import pandas as pd
 import numpy as np
 
