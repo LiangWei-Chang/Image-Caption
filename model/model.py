@@ -12,13 +12,13 @@ def get_hparams():
     vocab_size = len(dec_map)
     hparams = tf.contrib.training.HParams(
         vocab_size=vocab_size,
-        batch_size=256,
+        batch_size=64,
         rnn_units=256,
         image_embedding_size=256,
         word_embedding_size=256,
         drop_keep_prob=0.7,
-        lr=1e-4,
-        training_epochs=50,
+        lr=1e-3,
+        training_epochs=150,
         max_caption_len=15,
         ckpt_dir='model_ckpt/')
     return hparams
