@@ -6,6 +6,8 @@ import sys
 sys.path.append('model')
 sys.path.append('utils')
 from tqdm import tqdm
+from model import *
+from utils import *
 
 def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
     img_ids, caps = [], []
