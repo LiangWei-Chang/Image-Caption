@@ -19,7 +19,7 @@ def get_hparams():
         drop_keep_prob=0.7,
         lr=1e-3,
         training_epochs=150,
-        max_caption_len=15,
+        max_caption_len=30,
         ckpt_dir='model_ckpt/')
     return hparams
 
