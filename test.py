@@ -21,7 +21,9 @@ def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
     for i in tqdm(range(batch_num)):
         st = i * batch_size
         ed = (i + 1) * batch_size if not i == batch_num - 1 else df_test.shape[0]
-        img = df_test['img'][st:ed]
+        img = np.zeros((ed-st, 256))
+        for j in range(img.shape[0]):
+            img[j] = df_test['img'][j]
         img_ids += list(df_test['img'][st:ed].values)
         caps += model.inference(img, enc_map, dec_map)
 
