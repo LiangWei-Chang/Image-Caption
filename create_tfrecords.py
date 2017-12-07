@@ -13,16 +13,9 @@ def create_tfrecords(df_cap, img_df, filename, num_files=5):
     def _int64_feature(value):
         return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
-    num_records_per_file = df_cap.shape[0] // num_files
+    num_records_per_file = img_df.shape[0] // num_files
 
     total_count = 0
-
-    length = []
-    for cap in df_cap['caption']:
-        length.append(len(cap.split(',')))
-    df_cap['len'] = np.array(length)
-    df_cap = df_cap.sort_values(by=['len', 'img_id'])
-    df_cap = df_cap.reset_index(drop=True)
 
     print("Create training dataset....")
     for i in range(num_files):
