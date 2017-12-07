@@ -214,9 +214,11 @@ class ImageCaptionModel(object):
         # get <start> and <end> word id
         st, ed = enc_map['<BEG>'], enc_map['<END>']
 
-        caption_id = []
+        batch_size = img_embed.shape[0]
+
+        caption_id = [ [] for _ in range(batch_size) ]
         # feed into input_feed
-        start_word_feed = [st]
+        start_word_feed = [ [st] for _ in range(batch_size) ]
 
         # feed image_embed into initial state
         initial_state = sess.run(fetches='rnn_scope/initial_state:0', feed_dict={'image_embed:0': img_embed})
@@ -226,14 +228,17 @@ class ImageCaptionModel(object):
                                         feed_dict={'input_feed:0': start_word_feed,
                                                    'rnn_scope/state_feed:0': initial_state})
 
-        caption_id.append(int(nxt_word))
+        for j in range(batch_size):
+            caption_id[j].append(int(nxt_word[j]))
 
         for i in range(self.hps.max_caption_len - 1):
             nxt_word, this_state = sess.run(fetches=['optimize/prediction:0', 'rnn_scope/final_state:0'],
                                             feed_dict={'input_feed:0': nxt_word,
                                                        'rnn_scope/state_feed:0': this_state})
-            caption_id.append(int(nxt_word))
+            for j in range(batch_size):
+                caption_id[j].append(int(nxt_word[j]))
 
-        caption = [ dec_map[x] for x in caption_id[:None if ed not in caption_id else caption_id.index(ed)] ]
 
-        return ' '.join(caption)
+        caption = [ [ dec_map[x] for x in caption_id[j][:None if ed not in caption_id else caption_id.index(ed)] ] for j in range(batch_size) ]
+
+        return [ ' '.join(cap) for cap in caption ]

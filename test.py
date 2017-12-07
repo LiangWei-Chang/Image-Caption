@@ -8,22 +8,34 @@ sys.path.append('utils')
 from tqdm import tqdm
 from model import *
 from utils import *
+import pandas as pd
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
     img_ids, caps = [], []
 
     pbar = tqdm(total=len(img_test.items()))
-    for img_id, img in img_test.items():
-        img_ids.append(img_id)
-        img = np.expand_dims(img, axis=0)
-        caps.append(model.inference(img, enc_map, dec_map))
-        pbar.update(1)
+    df_test = pd.DataFrame(list(img_test.items()), columns=['img_id', 'img'])
+    batch_num = df_test.shape[0] // batch_size
+
+    for i in tqdm(range(batch_num)):
+        st = i * batch_size
+        ed = (i + 1) * batch_size if not i == batch_num - 1 else df_test.shape[0]
+        img = df_test['img'][st:ed]
+        img_ids += list(df_test['img'][st:ed].values)
+        caps += model.inference(img, enc_map, dec_map)
+
+    # for img_id, img in img_test.items():
+    #     img_ids.append(img_id)
+    #     img = np.expand_dims(img, axis=0)
+    #     caps.append(model.inference(img, enc_map, dec_map))
+    #     pbar.update(1)
     return pd.DataFrame({'img_id': img_ids, 'caption': caps}).set_index(['img_id'])
 
 enc_map = cPickle.load(open('dataset/enc_map.pkl', 'rb'))  # token => id
 dec_map = cPickle.load(open('dataset/dec_map.pkl', 'rb'))  # id => token
 hparams = get_hparams()
+batch_size = 64
 
 # create model
 tf.reset_default_graph()
