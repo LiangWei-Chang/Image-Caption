@@ -18,7 +18,7 @@ def build_caption_vector(enc_map, df):
     return pd.DataFrame({'img_id': img_ids, 'caption': cap_vecs}).set_index(['img_id'])
 
 def build_vocab(df, vocab):
-    threshold = 20
+    threshold = 50
     # Compite occurance of each vocab
     voc_count = {v: 0 for v in vocab}
     for img_id, row in df.iterrows():
