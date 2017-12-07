@@ -18,8 +18,8 @@ def get_hparams():
         word_embedding_size=256,
         drop_keep_prob=0.7,
         lr=1e-3,
-        training_epochs=50,
-        max_caption_len=15,
+        training_epochs=40,
+        max_caption_len=20,
         ckpt_dir='model_ckpt/')
     return hparams
 

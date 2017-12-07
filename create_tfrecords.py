@@ -28,32 +28,29 @@ def create_tfrecords(df_cap, img_df, filename, num_files=5):
     for i in range(num_files):
         # tfrecord writer: write record into files
         count = 0
-        writer = tf.python_io.TFRecordWriter(filename+ '-' + str(i+1) + '.tfrecord')
+        writer = tf.python_io.TFRecordWriter(filename + '-' + str(i + 1) + '.tfrecord')
 
         # put remaining records in last file
-        st = i * num_records_per_file                                              # start point (inclusive)
-        ed = (i+1) * num_records_per_file if i != num_files-1 else df_cap.shape[0] # end point (exclusive)
+        st = i * num_records_per_file  # start point (inclusive)
+        ed = (i + 1) * num_records_per_file if i != num_files - 1 else img_df.shape[0]  # end point (exclusive)
+        pbar = tqdm(total=ed - st)
+        for idx, row in img_df.iloc[st:ed].iterrows():
 
-        pbar = tqdm(total = ed - st)
+            img_representation = row['img']  # img representation in 256-d array format
 
-        for idx, row in df_cap.iloc[st : ed].iterrows():
+            # each image has some captions describing it.
+            for _, inner_row in df_cap[df_cap['img_id'] == row['img_id']].iterrows():
+            caption = eval(inner_row['caption'])  # caption in different sequence length list format
 
-            inner_row = img_df[img_df['img_id'] == row['img_id']]
-            img_representation = inner_row.iloc[0]['img']                 # img representation in 256-d array format
+                # construct 'example' object containing 'img', 'caption'
+                example = tf.train.Example(features=tf.train.Features(feature={'img': _float_feature(img_representation), 'caption': _int64_feature(caption)}))
 
-            caption = eval(row['caption'])        # caption in different sequence length list format
-
-            # construct 'example' object containing 'img', 'caption'
-            example = tf.train.Example(features=tf.train.Features(feature={
-                'img': _float_feature(img_representation),
-                'caption': _int64_feature(caption)
-            }))
-
-            count += 1
-            writer.write(example.SerializeToString())
+                count += 1
+                writer.write(example.SerializeToString())
             pbar.update(1)
-
-        print("Create {}-{}.tfrecord -- contains {} records".format(filename, str(i+1), count))
+            
+        print("Create {}-{}.tfrecord -- contains {} records".format(
+        filename, str(i + 1), count))
         total_count += count
         writer.close()
     print("Total records: {}".format(total_count))
