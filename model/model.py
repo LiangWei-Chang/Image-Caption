@@ -218,7 +218,7 @@ class ImageCaptionModel(object):
 
         caption_id = [ [] for _ in range(batch_size) ]
         # feed into input_feed
-        start_word_feed = [ [st] for _ in range(batch_size) ]
+        start_word_feed = [ st for _ in range(batch_size) ]
 
         # feed image_embed into initial state
         initial_state = sess.run(fetches='rnn_scope/initial_state:0', feed_dict={'image_embed:0': img_embed})
