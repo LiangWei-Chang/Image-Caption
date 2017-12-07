@@ -24,7 +24,7 @@ def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
         img = np.zeros((ed-st, 256))
         for j in range(img.shape[0]):
             img[j] = df_test['img'][j]
-        img_ids += list(df_test['img'][st:ed].values)
+        img_ids += list(df_test['img_id'][st:ed])
         caps += model.inference(img, enc_map, dec_map)
 
     # for img_id, img in img_test.items():
