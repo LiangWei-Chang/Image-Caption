@@ -16,10 +16,10 @@ def get_hparams():
         rnn_units=256,
         image_embedding_size=256,
         word_embedding_size=256,
-        drop_keep_prob=0.5,
-        lr=5e-4,
+        drop_keep_prob=0.7,
+        lr=1e-3,
         training_epochs=50,
-        max_caption_len=30,
+        max_caption_len=15,
         ckpt_dir='model_ckpt/')
     return hparams
 
@@ -76,6 +76,7 @@ class ImageCaptionModel(object):
         # when training, add dropout to regularize.
         if self.mode == 'train':
             rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, input_keep_prob=self.hps.drop_keep_prob, output_keep_prob=self.hps.drop_keep_prob)
+            # Todo: maybe attention
 
         # run rnn
         with tf.variable_scope('rnn_scope', initializer=tf.random_uniform_initializer(minval=-1, maxval=1)) as rnn_scope:
@@ -197,19 +198,7 @@ class ImageCaptionModel(object):
 
             print('Done')
 
-    def inference(self, img_embed, enc_map, dec_map):
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            # restore variables from disk.
-            ckpt = tf.train.get_checkpoint_state(self.hps.ckpt_dir)
-            if ckpt and ckpt.model_checkpoint_path:
-                saver.restore(sess, tf.train.latest_checkpoint(self.hps.ckpt_dir))
-                caption = self._predict(sess, img_embed, enc_map, dec_map)
-                return caption
-            else:
-                print("No checkpoint found.")
-
-    def _predict(self, sess, img_embed, enc_map, dec_map):
+    def inference(self, sess, img_embed, enc_map, dec_map):
 
         # get <start> and <end> word id
         st, ed = enc_map['<BEG>'], enc_map['<END>']

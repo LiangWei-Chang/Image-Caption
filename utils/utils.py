@@ -104,6 +104,6 @@ def get_seq_embeddings(input_seq, vocab_size, word_embedding_size):
     with tf.variable_scope('seq_embedding'), tf.device("/cpu:0"):
         embedding_matrix = tf.get_variable(name='embedding_matrix', shape=[vocab_size, word_embedding_size], initializer=tf.random_uniform_initializer(minval=-1, maxval=1))
 
-    # [batch_size, padded_length, embedding_size]
-    seq_embeddings = tf.nn.embedding_lookup(embedding_matrix, input_seq)
+        # [batch_size, padded_length, embedding_size]
+        seq_embeddings = tf.nn.embedding_lookup(embedding_matrix, input_seq)
     return seq_embeddings
