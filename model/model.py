@@ -239,6 +239,6 @@ class ImageCaptionModel(object):
                 caption_id[j].append(int(nxt_word[j]))
 
 
-        caption = [ [ dec_map[x] for x in caption_id[j][:None if ed not in caption_id else caption_id.index(ed)] ] for j in range(batch_size) ]
+        caption = [ [ dec_map[x] for x in caption_id[j][:None if ed not in caption_id[j] else caption_id[j].index(ed)] ] for j in range(batch_size) ]
 
         return [ ' '.join(cap) for cap in caption ]
