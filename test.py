@@ -21,11 +21,12 @@ def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, tf.train.latest_checkpoint(hparams.ckpt_dir))
 
+            pbar = tqdm(total=len(img_test.items()))
             for img_id, img in img_test.items():
                 img_ids.append(img_id)
                 img = np.expand_dims(img, axis=0)
                 caps.append(model.inference(sess, img, enc_map, dec_map))
-
+                pbar.update(1)
         else:
             print("No checkpoint found.")
     return pd.DataFrame({'img_id': img_ids, 'caption': caps}).set_index(['img_id'])
