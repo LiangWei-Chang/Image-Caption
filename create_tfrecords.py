@@ -40,7 +40,7 @@ def create_tfrecords(df_cap, img_df, filename, num_files=5):
 
             # each image has some captions describing it.
             for _, inner_row in df_cap[df_cap['img_id'] == row['img_id']].iterrows():
-            caption = eval(inner_row['caption'])  # caption in different sequence length list format
+                caption = eval(inner_row['caption'])  # caption in different sequence length list format
 
                 # construct 'example' object containing 'img', 'caption'
                 example = tf.train.Example(features=tf.train.Features(feature={'img': _float_feature(img_representation), 'caption': _int64_feature(caption)}))
@@ -48,7 +48,7 @@ def create_tfrecords(df_cap, img_df, filename, num_files=5):
                 count += 1
                 writer.write(example.SerializeToString())
             pbar.update(1)
-            
+
         print("Create {}-{}.tfrecord -- contains {} records".format(
         filename, str(i + 1), count))
         total_count += count
