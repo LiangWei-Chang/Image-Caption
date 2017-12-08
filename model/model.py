@@ -107,7 +107,7 @@ class ImageCaptionModel(object):
                 # run a single rnn step
                 outputs, state = rnn_cell(inputs=tf.squeeze(self.seq_embeddings, axis=[1]), state=state_tuple)
 
-                outputs = tf.reshape(outputs, [self.hps.batch_size, -1, rnn_cell.output_size])
+                outputs = tf.reshape(outputs, [1, -1, rnn_cell.output_size])
                 # concatenate the resulting state.
                 final_state = tf.concat(values=state, axis=1, name='final_state')
 
