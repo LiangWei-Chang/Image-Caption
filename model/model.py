@@ -110,9 +110,10 @@ class ImageCaptionModel(object):
                 # concatenate the resulting state.
                 final_state = tf.concat(values=state, axis=1, name='final_state')
 
+        outputs = attention(outputs, self.hps.attention_size)
         # stack rnn output vertically
         # [sequence_len * batch_size, rnn_output_size]
-        rnn_outputs = tf.reshape(attention(outputs, self.hps.attention_size) , [-1, rnn_cell.output_size])
+        rnn_outputs = tf.reshape(outputs , [-1, rnn_cell.output_size])
 
         # get logits after transforming from dense layer
         with tf.variable_scope("logits") as logits_scope:
