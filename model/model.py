@@ -3,6 +3,7 @@ import numpy as np
 import sys
 sys.path.append('utils')
 from utils import *
+from attention import *
 from tqdm import tqdm
 import _pickle as cPickle
 import os
@@ -20,6 +21,7 @@ def get_hparams():
         lr=5e-4,
         training_epochs=100,
         max_caption_len=20,
+        attention_size=50,
         ckpt_dir='model_ckpt/')
     return hparams
 
@@ -112,6 +114,8 @@ class ImageCaptionModel(object):
         # [sequence_len * batch_size, rnn_output_size]
         rnn_outputs = tf.reshape(outputs, [-1, rnn_cell.output_size])
 
+        rnn_outputs = attention(tf.reshape(rnn_outputs, [self.hps.batch_size, -1, rnn_cell.output_size]), self.hps.attention_size)
+        
         # get logits after transforming from dense layer
         with tf.variable_scope("logits") as logits_scope:
             rnn_out = {'weights': tf.Variable(tf.random_normal(shape=[self.hps.rnn_units, self.hps.vocab_size],
