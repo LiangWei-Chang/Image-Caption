@@ -112,10 +112,8 @@ class ImageCaptionModel(object):
 
         # stack rnn output vertically
         # [sequence_len * batch_size, rnn_output_size]
-        rnn_outputs = tf.reshape(outputs, [-1, rnn_cell.output_size])
+        rnn_outputs = tf.reshape(attention(outputs, self.hps.attention_size) , [-1, rnn_cell.output_size])
 
-        rnn_outputs = attention(tf.reshape(rnn_outputs, [self.hps.batch_size, -1, rnn_cell.output_size]), self.hps.attention_size)
-        
         # get logits after transforming from dense layer
         with tf.variable_scope("logits") as logits_scope:
             rnn_out = {'weights': tf.Variable(tf.random_normal(shape=[self.hps.rnn_units, self.hps.vocab_size],
