@@ -8,6 +8,7 @@ from tqdm import tqdm
 import _pickle as cPickle
 import os
 import heapq
+import math
 
 def get_hparams():
     dec_map = cPickle.load(open('./dataset/dec_map.pkl', 'rb'))  # id => token
@@ -20,7 +21,7 @@ def get_hparams():
         word_embedding_size=256,
         drop_keep_prob=0.7,
         lr=1e-3,
-        training_epochs=100,
+        training_epochs=200,
         max_caption_len=15,
         ckpt_dir='model_ckpt/')
     return hparams
