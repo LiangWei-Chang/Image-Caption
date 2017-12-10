@@ -25,7 +25,7 @@ def generate_captions(model, enc_map, dec_map, img_test, max_len=15):
             for img_id, img in img_test.items():
                 img_ids.append(img_id)
                 img = np.expand_dims(img, axis=0)
-                caps.append(model.inference(sess, img, enc_map, dec_map))
+                caps.append(model._beam_search(sess, img, enc_map, dec_map))
                 pbar.update(1)
         else:
             print("No checkpoint found.")

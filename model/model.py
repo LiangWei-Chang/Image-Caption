@@ -230,3 +230,151 @@ class ImageCaptionModel(object):
         caption = [ dec_map[x] for x in caption_id[:None if ed not in caption_id else caption_id.index(ed)] ]
 
         return ' '.join(caption)
+
+    def _beam_search(self , sess , img_embed , enc_map , dec_map , beam_size = 3 ):
+
+        # get <start> and <end> word id
+        st, ed = enc_map['<BEG>'], enc_map['<END>']
+
+        # feed into input_feed
+        start_word_feed = [st]
+
+        # feed image_embed into initial state
+        initial_state = sess.run(fetches='rnn_scope/initial_state:0', feed_dict={'image_embed:0': img_embed})
+
+
+        initial_beam = Caption(sentence=[st], state=initial_state[0], logprob=0.0, score=0.0)
+
+        partial_captions = TopN(beam_size)
+        partial_captions.push(initial_beam)
+        complete_captions = TopN(beam_size)
+
+        for _ in range(self.hps.max_caption_len - 1):
+            partial_captions_list = partial_captions.extract()
+            partial_captions.reset()
+            input_feed = np.array([c.sentence[-1] for c in partial_captions_list])
+            state_feed = np.array([c.state for c in partial_captions_list])
+
+#             print("input = ",input_feed.shape)
+#             print("state = ",state_feed.shape)
+#             print("shape = ",input_feed.shape[0])
+#             print(" i = ",input_feed)
+
+            new_state_list , softmax_list = sess.run(fetches=['rnn_scope/final_state:0' , 'optimize/softmax:0'],
+                                                     feed_dict={'input_feed:0': input_feed, 'rnn_scope/state_feed:0': state_feed})
+
+            for i , tmp_partial_captions in enumerate(partial_captions_list):
+                word_probility = softmax_list[i]
+
+                state = new_state_list[i]
+                words_and_probs = list(enumerate(word_probility))
+                words_and_probs.sort(key=lambda x: -x[1])
+                top_n_words = words_and_probs[0:beam_size]
+
+                for w,p in top_n_words:
+                    if p < 1e-12:
+                        continue
+
+                    sentence = tmp_partial_captions.sentence + [w]
+                    logprob  = tmp_partial_captions.logprob + math.log(p)
+                    score = logprob
+
+#                     if metadata:
+#                         metadata_list = tmp_partial_captions.metadata + [metadata[i]]
+#                     else:
+#                         metadata_list = None
+                    if w == ed:
+                        beam = Caption(sentence, state, logprob, score)
+                        complete_captions.push(beam)
+                    else:
+                        beam = Caption(sentence, state, logprob, score)
+                        partial_captions.push(beam)
+            if partial_captions.size() == 0:
+                # We have run out of partial candidates; happens when beam_size = 1.
+                break
+
+        if not complete_captions.size():
+            complete_captions = partial_captions
+
+
+        for i, caption_id in enumerate(complete_captions.extract(sort=True)):
+            caption = [ dec_map[x] for x in caption_id.sentence[1:None if ed not in caption_id.sentence else caption_id.sentence.index(ed)] ]
+            break
+
+        return ' '.join(caption)
+
+    class TopN(object):
+        """Maintains the top n elements of an incrementally provided set."""
+
+        def __init__(self, n):
+            self._n = n
+            self._data = []
+
+        def size(self):
+            assert self._data is not None
+            return len(self._data)
+
+        def push(self, x):
+            """Pushes a new element."""
+            assert self._data is not None
+            if len(self._data) < self._n:
+                heapq.heappush(self._data, x)
+            else:
+                heapq.heappushpop(self._data, x)
+
+        def extract(self, sort=False):
+            """Extracts all elements from the TopN. This is a destructive operation.
+            The only method that can be called immediately after extract() is reset().
+            Args:
+              sort: Whether to return the elements in descending sorted order.
+            Returns:
+              A list of data; the top n elements provided to the set.
+            """
+            assert self._data is not None
+            data = self._data
+            self._data = None
+            if sort:
+                data.sort(reverse=True)
+            return data
+
+        def reset(self):
+            """Returns the TopN to an empty state."""
+            self._data = []
+
+    class Caption(object):
+        """Represents a complete or partial caption."""
+
+        def __init__(self, sentence, state, logprob, score, metadata=None):
+            """Initializes the Caption.
+            Args:
+              sentence: List of word ids in the caption.
+              state: Model state after generating the previous word.
+              logprob: Log-probability of the caption.
+              score: Score of the caption.
+              metadata: Optional metadata associated with the partial sentence. If not
+                None, a list of strings with the same length as 'sentence'.
+            """
+            self.sentence = sentence
+            self.state = state
+            self.logprob = logprob
+            self.score = score
+
+        def __cmp__(self, other):
+            """Compares Captions by score."""
+            assert isinstance(other, Caption)
+            if self.score == other.score:
+                return 0
+            elif self.score < other.score:
+                return -1
+            else:
+                return 1
+
+        # For Python 3 compatibility (__cmp__ is deprecated).
+        def __lt__(self, other):
+            assert isinstance(other, Caption)
+            return self.score < other.score
+
+        # Also for Python 3 compatibility.
+        def __eq__(self, other):
+            assert isinstance(other, Caption)
+            return self.score == other.score
