@@ -18,9 +18,9 @@ def get_hparams():
         image_embedding_size=256,
         word_embedding_size=256,
         drop_keep_prob=0.7,
-        lr=1e-3,
+        lr=5e-4,
         training_epochs=100,
-        max_caption_len=15,
+        max_caption_len=20,
         attention_size=50,
         ckpt_dir='model_ckpt/')
     return hparams
@@ -100,7 +100,7 @@ class Caption(object):
     def __eq__(self, other):
         assert isinstance(other, Caption)
         return self.score == other.score
-    
+
 class ImageCaptionModel(object):
 
     def __init__(self, hparams, mode):
