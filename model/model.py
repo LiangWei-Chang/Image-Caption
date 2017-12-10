@@ -205,13 +205,11 @@ class ImageCaptionModel(object):
     def inference(self, sess, img_embed, enc_map, dec_map):
 
         # get <start> and <end> word id
-        st, ed = enc_map['<BEG>'], enc_map['<END>']
+        st, ed = enc_map['<ST>'], enc_map['<ED>']
 
-        batch_size = img_embed.shape[0]
-
-        caption_id = [ [] for _ in range(batch_size) ]
+        caption_id = []
         # feed into input_feed
-        start_word_feed = [ st for _ in range(batch_size) ]
+        start_word_feed = [st]
 
         # feed image_embed into initial state
         initial_state = sess.run(fetches='rnn_scope/initial_state:0', feed_dict={'image_embed:0': img_embed})
@@ -221,17 +219,14 @@ class ImageCaptionModel(object):
                                         feed_dict={'input_feed:0': start_word_feed,
                                                    'rnn_scope/state_feed:0': initial_state})
 
-        for j in range(batch_size):
-            caption_id[j].append(int(nxt_word[j]))
+        caption_id.append(int(nxt_word))
 
         for i in range(self.hps.max_caption_len - 1):
             nxt_word, this_state = sess.run(fetches=['optimize/prediction:0', 'rnn_scope/final_state:0'],
                                             feed_dict={'input_feed:0': nxt_word,
                                                        'rnn_scope/state_feed:0': this_state})
-            for j in range(batch_size):
-                caption_id[j].append(int(nxt_word[j]))
+            caption_id.append(int(nxt_word))
 
+        caption = [ dec_map[x] for x in caption_id[:None if ed not in caption_id else caption_id.index(ed)] ]
 
-        caption = [ [ dec_map[x] for x in caption_id[j][:None if ed not in caption_id[j] else caption_id[j].index(ed)] ] for j in range(batch_size) ]
-
-        return [ ' '.join(cap) for cap in caption ]
+        return ' '.join(caption)
