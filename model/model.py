@@ -7,6 +7,7 @@ from attention import *
 from tqdm import tqdm
 import _pickle as cPickle
 import os
+import heapq
 
 def get_hparams():
     dec_map = cPickle.load(open('./dataset/dec_map.pkl', 'rb'))  # id => token
@@ -18,10 +19,9 @@ def get_hparams():
         image_embedding_size=256,
         word_embedding_size=256,
         drop_keep_prob=0.7,
-        lr=5e-4,
+        lr=1e-3,
         training_epochs=100,
-        max_caption_len=20,
-        attention_size=50,
+        max_caption_len=15,
         ckpt_dir='model_ckpt/')
     return hparams
 
@@ -183,11 +183,9 @@ class ImageCaptionModel(object):
                 # run a single rnn step
                 outputs, state = rnn_cell(inputs=tf.squeeze(self.seq_embeddings, axis=[1]), state=state_tuple)
 
-                outputs = tf.reshape(outputs, [1, -1, rnn_cell.output_size])
                 # concatenate the resulting state.
                 final_state = tf.concat(values=state, axis=1, name='final_state')
 
-        outputs = attention(outputs, self.hps.attention_size)
         # stack rnn output vertically
         # [sequence_len * batch_size, rnn_output_size]
         rnn_outputs = tf.reshape(outputs , [-1, rnn_cell.output_size])
