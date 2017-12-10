@@ -306,7 +306,7 @@ class ImageCaptionModel(object):
 
         return ' '.join(caption)
 
-    def _beam_search(self , sess , img_embed , enc_map , dec_map , beam_size = 3 ):
+    def _beam_search(self , sess , img_embed , enc_map , dec_map , beam_size=3):
 
         # get <start> and <end> word id
         st, ed = enc_map['<BEG>'], enc_map['<END>']
